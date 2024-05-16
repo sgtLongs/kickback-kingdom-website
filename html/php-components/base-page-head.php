@@ -58,6 +58,15 @@ if (isset($thisBlogPost))
     $pageVisitId = '/blog-post/'.$thisBlogPost["Id"];
 }
 
+if(isset($thisStore))
+{
+    $pageTitle = "Market";
+    //$pageImage = ;
+    $pageDesc = "Hansi market, under development or something idk";
+    $pageVisitId = '/market/';
+}
+
+
 
 RecordPageVisit($pageVisitId);
 $pageVisitResp = GetPageVisits($pageVisitId);

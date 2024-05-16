@@ -3,6 +3,34 @@ require_once(($_SERVER["DOCUMENT_ROOT"] ?: __DIR__) . "/Kickback/init.php");
 
 $session = require(\Kickback\SCRIPT_ROOT . "/api/v1/engine/session/verifySession.php");
 require("php-components/base-page-pull-active-account-info.php");
+$storeResp = getStoreById(1);
+$thisStore = ["Id"=>"?"];
+$products = [];
+
+if (!$storeResp->Success)
+{
+    $showPopUpError = true;
+    $PopUpTitle = "Market Not Found";
+    $PopUpMessage = "Market has been lost to the sea!";
+}
+else
+{
+    $thisStore = $storeResp->Data;
+    $productsResp = getProductsByStoreId($storeResp->Data["Id"]);
+
+    if(!$productsResp->Success)
+    {
+        $showPopUpError = true;
+        $PopUpTitle = "Prodcuts Not Found!";
+        $PopUpMessage = "Products have been lost to the sea!";
+    }
+    else
+    {
+        $products = $productsResp->Data;
+    }
+}
+
+
 ?>
 
 <!DOCTYPE html>
@@ -41,25 +69,25 @@ require("php-components/base-page-pull-active-account-info.php");
                 <div class="row row-cols-1 row-cols-md-3 g-4">
                     <?php
                     // Example array of products
-                    $products = [
-                        ['name' => 'Product 1', 'price' => '15 Coins', 'image' => 'path/to/image1.jpg'],
-                        ['name' => 'Product 2', 'price' => '30 Coins', 'image' => 'path/to/image2.jpg'],
-                        ['name' => 'Product 3', 'price' => '45 Coins', 'image' => 'path/to/image3.jpg']
-                    ];
+                    
 
+                    
                     foreach ($products as $product) {
-                        echo '<div class="col">';
-                        echo '<div class="card h-100">';
-                        echo '<img src="'. $product['image'] .'" class="card-img-top" alt="'. $product['name'] .'">';
-                        echo '<div class="card-body">';
-                        echo '<h5 class="card-title">'. $product['name'] .'</h5>';
-                        echo '<p class="card-text">Price: '. $product['price'] .'</p>';
-                        echo '</div>';
-                        echo '<div class="card-footer"><a href="#" class="btn btn-primary">Add to Cart</a></div>';
-                        echo '</div>';
-                        echo '</div>';
-                    }
-                    ?>
+                        ?>
+                        <div class="col">
+                        <div class="card h-100">
+                        <img src='<?= $product['image']; ?>' class="card-img-top" alt="<?= $product['name']; ?>"> 
+                        <div class="card-body">
+                        <h5 class="card-title">'<?= $product['name']; ?>'</h5>
+                        <p class="card-text">Price: '<?= $product['price']; ?>'</p>
+                        </div>
+                        <div class="card-footer"><a href="#" class="btn btn-primary">Add to Cart</a></div>
+                        </div>
+                        </div>
+                        <?php
+
+                        }
+                        ?>
                 </div>
                 <!-- Products Section End -->
 

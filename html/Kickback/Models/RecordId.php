@@ -2,8 +2,9 @@
 declare(strict_types=1);
 
 namespace Kickback\Models;
+use Kickback\views\vRecordId;
 
-class RecordId
+class RecordId extends vRecordId
 {
     public string    $ctime;
     public int  $crand;
@@ -43,6 +44,7 @@ class RecordId
     public function GetCTime(): string {
         return date('Y-m-d H:i:s.u');
     }
+
 }
 
 ?>

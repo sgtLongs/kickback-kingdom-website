@@ -27,5 +27,14 @@ class Database {
 
         return self::$conn;
     }
+
+    public static function executeSqlQuery(string $stmt, array $params)
+    {
+        $connection = Database::getConnection();
+
+        $result = mysqli_execute_query($connection, $stmt, $params);
+
+        return $result;
+    }
 }
 ?>
