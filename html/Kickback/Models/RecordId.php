@@ -3,11 +3,10 @@ declare(strict_types=1);
 
 namespace Kickback\Models;
 use Kickback\Views;
+use Kickback\Views\vRecordId;
 
 class RecordId extends vRecordId
 {
-    //public string    $ctime;
-    //public int  $crand;
     
     public function __construct() {
         $this->ctime = $this->GetCTime();

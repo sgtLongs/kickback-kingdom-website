@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Kickback\Models;
 use Kickback\Views\vAccount;
+use Kickback\Views;
 use \Datetime;
 
 class Store extends RecordId

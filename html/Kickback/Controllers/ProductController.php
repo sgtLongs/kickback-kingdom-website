@@ -22,12 +22,13 @@ class ProductController extends BaseController
 
     public static function runUnitTests()
     {
-        $testStoreResp = StoreController::getStore(new vRecordId(887940953, "2024-04-23 08:54:36"));
-        $testStoreId = new ForeignRecordId($testStoreResp->data->crand, $testStoreResp->data->ctime);
+        $testStoreResp = StoreController::getStore(new vRecordId("2024-04-23 08:54:36", 887940953));
+        $testStoreId = new ForeignRecordId($testStoreResp->data->ctime, $testStoreResp->data->crand);
 
-        $testProductId = new vRecordId(95465168, '2023-05-17 09:51:25');
+        $testProductId = new vRecordId('2023-05-17 09:51:25', 95465168);
         $testAddProduct = new Product("test_add_product", $testStoreId);
-        $testRemoveProduct = new vProduct($testAddProduct->crand, $testAddProduct->ctime,"test_add_product", $testStoreId);
+        $testRemoveProductId = new vRecordId($testAddProduct->ctime, $testAddProduct->crand);
+        $testRemoveProduct = new vProduct($testRemoveProductId, "test_add_product", $testStoreId);
 
         BaseController::runTest([ProductController::class, "doesProductExist"], [$testProductId]);
         BaseController::runTest([ProductController::class, "getProduct"], [$testProductId]);
@@ -81,7 +82,9 @@ class ProductController extends BaseController
         {
            $result = Database::executeSqlQuery($stmt, $params);
            $row = $result->fetch_assoc();
-           $product = new vProduct($row["product_crand"], $row["product_ctime"], $row["product_name"], new ForeignRecordId($row["ref_store_crand"], $row["ref_store_ctime"]));
+           $productId = new vRecordId($row["product_ctime"], $row["product_crand"]);
+           $refStoreId = new ForeignRecordId($row["ref_store_ctime"], $row["ref_store_crand"]);
+           $product = new vProduct($productId, $row["product_name"], $refStoreId);
            
            if($result->num_rows > 0)
            {

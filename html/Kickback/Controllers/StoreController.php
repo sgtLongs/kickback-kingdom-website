@@ -24,7 +24,7 @@ class StoreController extends BaseController
 
     public static function runUnitTests()
     {
-        $testStoreId = new vRecordId(887940953, "2024-04-23 08:54:36");
+        $testStoreId = new vRecordId("2024-04-23 08:54:36", 887940953);
 
         $testOwner = StoreController::getTestOwner();
         $testAddStore = new Store("test_store_add_store", $testOwner);
@@ -37,9 +37,9 @@ class StoreController extends BaseController
 
     public static function getTestOwner()
     {
-        $testAccount = new vAccount(1, "2022-10-06 16:46:07");
-        $accountResp = AccountController::getAccount($testAccount);
-        $testOwner = new ForeignRecordId($accountResp->data["Id"], $accountResp->data["DateCreated"]);
+        $testAccount = new vAccount( "2022-10-06 16:46:07", 1);
+        $accountResp = AccountController::getAccountById($testAccount);
+        $testOwner = new ForeignRecordId($accountResp->data->ctime, $accountResp->data->crand);
 
         return $testOwner;
     }
@@ -56,12 +56,12 @@ class StoreController extends BaseController
             $result = Database::executeSqlQuery($stmt, $params);
             $row = $result->fetch_assoc();
  
-            $storeOwner = new ForeignRecordId($row["ref_account_crand"], $row["ref_account_ctime"]);
-            $returnedStore = new vStore($row["store_crand"], $row["store_ctime"], $row["store_name"], $storeOwner);
+            $storeOwner = new ForeignRecordId($row["ref_account_ctime"], $row["ref_account_crand"]);
+            $returnedStoreId = new vRecordId($row["store_ctime"], $row["store_crand"]);
+            $returnedStore = new vStore($returnedStoreId, $row["store_name"], $storeOwner);
 
             if($result->num_rows > 0)
             {
-
                 $storeResp->success = true;
                 $storeResp->message = "Successfully Found Store";
                 $storeResp->data = $returnedStore;  
@@ -133,7 +133,7 @@ class StoreController extends BaseController
     
             $result = Database::executeSqlQuery($stmt, $params);
     
-            $doesStoreExistResp = StoreController::doesStoreExist(new vRecordId($storeId->crand, $storeId->ctime));
+            $doesStoreExistResp = StoreController::doesStoreExist(new vRecordId($storeId->ctime, $storeId->crand));
 
             if($doesStoreExistResp->data == false)
             {

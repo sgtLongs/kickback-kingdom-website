@@ -10,9 +10,9 @@ class vProduct extends vRecordId
     public string $name;
     public ForeignRecordId $storeId;
 
-    function __construct(int $crand, string $ctime, string $productName, ForeignRecordId $store)
+    function __construct(vRecordId $product, string $productName, ForeignRecordId $store)
     {
-        parent::__construct($crand, $ctime);
+        parent::__construct($product->ctime, $product->crand);
 
         $this->name = $productName;
         $this->storeId = $store;

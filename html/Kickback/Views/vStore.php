@@ -11,9 +11,9 @@ class vStore extends vRecordId
     public string $name;
     public ForeignRecordId $ownerId;
 
-    function __construct(int $crand, string $ctime, string $storeName, ForeignRecordId $owner)
+    function __construct(vRecordId $store, string $storeName, ForeignRecordId $owner)
     {
-        parent::__construct($crand, $ctime);
+        parent::__construct( $store->ctime, $store->crand);
         $this->ownerId = $owner;
         $this->name = $storeName;
     }

@@ -24,12 +24,12 @@ class CartController extends BaseController
 
     public static function runUnitTests()
     {
-        $testStoreResp = StoreController::getStore(new vRecordId(887940953, "2024-04-23 08:54:36"));
-        $testStoreId = new ForeignRecordId($testStoreResp->data->crand, $testStoreResp->data->ctime);
-        $testProductId = new vRecordId(95465168, '2023-05-17 09:51:25');
+        $testStoreResp = StoreController::getStore(new vRecordId("2024-04-23 08:54:36", 887940953));
+        $testStoreId = new ForeignRecordId($testStoreResp->data->ctime, $testStoreResp->data->crand);
+        $testProductId = new vRecordId('2023-05-17 09:51:25', 95465168);
         $testAccount = StoreController::getTestOwner();
 
-        $testCartId = new vRecordId(98137686, "2020-08-11 09:51:25");
+        $testCartId = new vRecordId("2020-08-11 09:51:25", 98137686);
         $testCartAdd = new Cart($testAccount, $testStoreId);
 
         BaseController::runTest([CartController::class, "doesCartExist"], [$testCartId]);
@@ -111,9 +111,9 @@ class CartController extends BaseController
             {
                 $row = $result->fetch_assoc();
 
-                $foundCartId = new vRecordId($row["cart_crand"], $row["cart_ctime"]);
-                $foundStoreId= new ForeignRecordId($row["ref_store_crand"], $row["ref_store_ctime"]);
-                $foundAccountId = new ForeignRecordId($row["ref_account_crand"], $row["ref_account_ctime"]);
+                $foundCartId = new vRecordId($row["cart_ctime"], $row["cart_crand"], );
+                $foundStoreId= new ForeignRecordId($row["ref_store_ctime"], $row["ref_store_crand"]);
+                $foundAccountId = new ForeignRecordId($row["ref_account_ctime"], $row["ref_account_crand"]);
 
                 $foundCart = new vCart($foundCartId, $foundStoreId, $foundAccountId);
 
@@ -145,7 +145,7 @@ class CartController extends BaseController
         {
             Database::executeSqlQuery($stmt, $params);
 
-            $cartId = new vRecordId($cart->crand, $cart->ctime);
+            $cartId = new vRecordId($cart->ctime, $cart->crand);
             $cartExistsResp = CartController::doesCartExist($cartId);
 
             if($cartExistsResp->data)
