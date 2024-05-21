@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Kickback\Controllers;
 use \Kickback\Services\Database;
 use \Kickback\Views\vRecordId;

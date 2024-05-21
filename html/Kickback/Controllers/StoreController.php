@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Kickback\Controllers;
 use \Kickback\Services\Database;
@@ -34,7 +35,7 @@ class StoreController extends BaseController
         BaseController::runTest([StoreController::class, 'removeStore'], [$testAddStore]);
     }
 
-    private static function getTestOwner()
+    public static function getTestOwner()
     {
         $testAccount = new vAccount(1, "2022-10-06 16:46:07");
         $accountResp = AccountController::getAccount($testAccount);
