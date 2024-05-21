@@ -20,6 +20,8 @@ class BaseController
 
         echo "<h5>Test Complete.</h5><br>";
 
+        return $response;
+
     }
 
     protected static function printResponse(Response $response)

@@ -8,11 +8,13 @@ use Kickback\Services\Database;
 use Kickback\Models\Response;
 use Kickback\Models\Cart;
 use Kickback\Models\ForeignRecordId;
+use Kickback\Models\CartProductLink;
 
 use Kickback\Views\vRecordId;
 use Kickback\Views\vProduct;
 use Kickback\Views\vCart;
 use Kickback\Views\vStore;
+use Kickback\Views\vCartProductLink;
 
 class CartController extends BaseController
 {
@@ -26,16 +28,22 @@ class CartController extends BaseController
     {
         $testStoreResp = StoreController::getStore(new vRecordId("2024-04-23 08:54:36", 887940953));
         $testStoreId = new ForeignRecordId($testStoreResp->data->ctime, $testStoreResp->data->crand);
-        $testProductId = new vRecordId('2023-05-17 09:51:25', 95465168);
+        $testProductId = new ForeignRecordId('2023-05-17 09:51:25', 95465168);
         $testAccount = StoreController::getTestOwner();
 
-        $testCartId = new vRecordId("2020-08-11 09:51:25", 98137686);
+        $testCartId = new ForeignRecordId("2020-08-11 09:51:25", 98137686);
         $testCartAdd = new Cart($testAccount, $testStoreId);
 
         BaseController::runTest([CartController::class, "doesCartExist"], [$testCartId]);
         BaseController::runTest([CartController::class, "getCart"], [$testCartId]);
         BaseController::runTest([CartController::class, "addCart"], [$testCartAdd]);
         BaseController::runTest([CartController::class, "removeCart"], [$testCartAdd]);
+
+        $addedLinkResp = BaseController::runTest([CartController::class, "linkProductToCart"], [$testProductId, $testCartId]);
+        $addedLinkId = new vRecordId($addedLinkResp->data->ctime, $addedLinkResp->data->crand);
+        BaseController::runTest([CartController::class, "doesCartProductLinkExist"], [$addedLinkId]);
+        BaseController::runTest([CartController::class, "getCartProductLink"], [$addedLinkId]);
+        BaseController::runTest([CartController::class, "removeCartProductLink"], [$addedLinkId]);
     }
 
     private static function printCartIdDebugInfo(mixed $cart, $e = null)
@@ -58,6 +66,28 @@ class CartController extends BaseController
         return $infoMessage;
         
     }
+
+    private static function printLinkIdDebugInfo(mixed $link, $e = null)
+    {
+        if($link instanceof vRecordId)
+        {
+            $infoMessage = "link_ctime : ".$link->ctime." | link_crand : ".$link->crand;
+        }
+
+        if($link instanceof CartProductLink)
+        {
+            $infoMessage = "link_ctime : ".$link->ctime." | link_crand : ".$link->crand." | ref_cart_ctime : ".$link->cartId->ctime." | ref_cart_crand : ".$link->cartId->crand." | store_ctime : ".$link->productId->ctime." | store_crand : ".$link->productId->crand;
+        }
+
+        if(isset($e))
+        {
+            $infoMessage = $infoMessage." | Exception : ".$e;
+        }
+
+        return $infoMessage;  
+    }
+
+    
 
     public static function doesCartExist(vRecordId $cart)
     {
@@ -196,6 +226,148 @@ class CartController extends BaseController
         }
 
         return $cartResp;
+    }
+
+    
+
+    public static function doesCartProductLinkExist(vRecordId $link)
+    {
+        $stmt = "SELECT link_ctime FROM cart_product_link WHERE link_ctime = ? AND link_crand = ? LIMIT 1";
+
+        $params = [$link->ctime, $link->crand];
+
+        $linkResp = new Response(false, "Unkown Error In Checking Existence of Cart Product Link. ".CartController::printLinkIdDebugInfo($link), null);
+
+        try
+        {
+            $result = Database::executeSqlQuery($stmt, $params);
+
+            if($result->num_rows > 0)
+            {
+                $linkResp->success = true;
+                $linkResp->message = "Link Exists: ".CartController::printLinkIdDebugInfo($link);
+                $linkResp->data = true;
+            }
+            else
+            {
+                $linkResp->message = "Link Does Not Exist.";
+                $linkResp->data = false;
+            }
+
+        }
+        catch(Exception $e)
+        {
+            $linkResp->message = "Error In Executing Sql Query To Check Existence Of Cart Product Link. ".CartController::printLinkIdDebugInfo($link, $e);
+        }
+
+        return $linkResp;
+    }
+
+    public static function getCartProductLink(vRecordId $link)
+    {
+        $stmt = "SELECT link_ctime, link_crand, ref_cart_ctime, ref_cart_crand, ref_product_ctime, ref_product_crand FROM cart_product_link WHERE link_ctime = ? AND link_crand = ? LIMIT 1";
+
+        $params = [$link->ctime, $link->crand];
+
+        $linkResp = new Response(false, "Unkown Error In Getting Cart Prodcut Link. ".CartController::printLinkIdDebugInfo($link), null);
+
+        try
+        {
+            $result = Database::executeSqlQuery($stmt, $params);
+
+            if($result->num_rows > 0)
+            {
+                $row = $result->fetch_assoc();
+
+                $linkId = new vRecordId($row["link_ctime"], $row["link_crand"]);
+                $cartId = new ForeignRecordId($row["ref_cart_ctime"], $row["ref_cart_crand"]);
+                $productId = new ForeignRecordId($row["ref_product_ctime"], $row["ref_product_crand"]);
+                $foundLink = new vCartProductLink($linkId, $cartId, $productId);
+
+                $linkResp->success = true;
+                $linkResp->message = "Store Found";
+                $linkResp->data = $foundLink;
+            }
+            else
+            {
+                $linkResp->message = "Cart Product Not Found. ".CartController::printLinkIdDebugInfo($link);
+            }
+
+
+        }
+        catch(Exception $e)
+        {
+            $linkResp->message = "Error In Executing Sql Query To Get Cart Product Link. ".CartController::printLinkIdDebugInfo($link, $e);
+        }
+
+        return $linkResp;
+    }
+
+    public static function removeCartProductLink(vRecordId $link)
+    {
+        $stmt = "DELETE FROM cart_product_link WHERE link_ctime = ? AND link_crand = ?";
+
+        $params = [$link->ctime, $link->crand];
+
+        $linkResp = new Response(false, "Unknown Error In Removing Cart Product Link. ".CartController::printLinkIdDebugInfo($link), null);
+
+        try
+        {
+            Database::executeSqlQuery($stmt, $params);
+
+            $linkExistsResp = CartController::doesCartProductLinkExist($link);
+
+            if($linkExistsResp->data == false)
+            {
+                $linkResp->success = true;
+                $linkResp->message = "Cart Product Link Removed. ".CartController::printLinkIdDebugInfo($link);
+            }
+            else
+            {
+                $linkResp->message = "Cart Product Link Was Not Removed";
+            }
+        }
+        catch (Exception $e)
+        {
+            $linkMessage = "Error In Executing Sql Query To Remove Cart Link. ".CartController::printLinkIdDebugInfo($link, $e);
+        }
+        
+        return $linkResp;
+    }
+
+    public static function linkProductToCart(ForeignRecordId $product, ForeignRecordId $cart)
+    {
+        $cartProductLink = new CartProductLink($product, $cart);
+
+        $stmt = "INSERT INTO cart_product_link (link_ctime, link_crand, ref_cart_ctime, ref_cart_crand, ref_product_ctime, ref_product_crand) VALUES (?,?,?,?,?,?)";
+
+        $params = [$cartProductLink->ctime, $cartProductLink->crand, $cartProductLink->cartId->ctime, $cartProductLink->cartId->crand, $cartProductLink->productId->ctime, $cartProductLink->productId->crand];
+
+        $linkResp = new Response(false, "Unknown Error In Linking Product To Cart. ".CartController::printLinkIdDebugInfo($cartProductLink), null);
+
+        try
+        {
+            Database::executeSqlQuery($stmt, $params);
+
+            $linkExistsResp = CartController::doesCartProductLinkExist($cartProductLink);
+
+            if($linkExistsResp->data)
+            {
+                $linkResp->success = true;
+                $linkResp->message = "Product Successfully Linked.";
+                $linkResp->data = $cartProductLink;
+            }
+            else
+            {
+                $linkResp->message = "Product Not Linked. ".CartController::printLinkIdDebugInfo($cartProductLink);
+            }
+        }
+        catch(Exception $e)
+        {
+            $linkResp->message = "Error in Executing Sql Query To Link Product To Cart. ".CartController::printLinkIdDebugInfo($cartProductLink, $e);
+        }
+
+        return $linkResp;
     }
 
 }
