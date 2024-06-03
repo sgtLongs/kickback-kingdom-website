@@ -11,6 +11,9 @@ use Kickback\Views\vAccount;
 use Kickback\Views\vMedia;
 use Kickback\Views\vQuest;
 use Kickback\Views\vBlogPost;
+use Kickback\Views\vDateTime;
+use Kickback\Views\vReviewStatus;
+use Kickback\Models\PlayStyle;
 
 class NewsController
 {
@@ -104,17 +107,22 @@ class NewsController
     {
         $news = new vNews();
         $news->type = $row["type"];
-
+        $dateTime = new vDateTime();
+        $dateTime->setDateTimeFromString($row["date"]);
         if ($news->type == "QUEST")
         {
             $quest = new vQuest('', $row["Id"]);
             $quest->locator = $row["locator"];
             $quest->title = $row["title"];
             $quest->summary = $row["text"];
+            $quest->reviewStatus = new vReviewStatus((bool) $row["published"]);
+            $quest->endDate = $dateTime;
+            $quest->playStyle = PlayStyle::from((int)$row["style"]);
+
             if (!empty($row["image"]))
             {
                 $icon = new vMedia();
-                $icon->mediaPath = $row["image"];
+                $icon->setMediaPath($row["image"]);
 
                 $quest->icon = $icon;
             }
@@ -143,13 +151,22 @@ class NewsController
         if ($news->type == "BLOG-POST")
         {
             $blogPost = new vBlogPost('', $row["Id"]);
-            $blogPost->locator = $row["locator"];
+            //$blogPost->locator = $row["locator"];
             $blogPost->title = $row["title"];
             $blogPost->summary = $row["text"];
+            $blogPost->publishedDateTime = $dateTime;
+            $blogPost->setLocator($row["locator"]);
+            $blogPost->reviewStatus = new vReviewStatus((bool) $row["published"]);
+
+
+            $author = new vAccount('', $row["account_1_id"]);
+            $author->username = $row["account_1_username"];
+            $blogPost->author = $author;
+
             if (!empty($row["image"]))
             {
                 $icon = new vMedia();
-                $icon->mediaPath = $row["image"];
+                $icon->setMediaPath($row["image"]);
 
                 $blogPost->icon = $icon;
             }

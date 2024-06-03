@@ -6,10 +6,13 @@ namespace Kickback\Views;
 use Kickback\Views\vRecordId;
 use Kickback\Views\vMedia;
 use Kickback\Views\vQuest;
+use Kickback\Views\vQuestLine;
 use Kickback\Views\vQuote;
 use Kickback\Views\vBlogPost;
 use Kickback\Views\vActivity;
-use DateTime;
+use Kickback\Views\vDateTime;
+use Kickback\Views\vReviewStatus;
+use Kickback\Models\PlayStyle;
 
 class vFeedCard
 {
@@ -18,21 +21,18 @@ class vFeedCard
     public vMedia $icon;
     public ?vQuest $quest = null;
     public ?vQuote $quote = null;
+    public ?vQuestLine $questLine = null;
     public ?vBlogPost $blogPost = null;
     public ?vActivity $activity = null;
     public ?string $url = null;
     public string $title;
-    public DateTime $dateTime;
-    public bool $expired = false;
-    public int $style = 0;
-    public bool $published = false;
+    public vDateTime $dateTime;
+    public vREviewStatus $reviewStatus;
     public string $description;
 
     //RENDERING TEXT
     public string $createdByPrefix = "Hosted";
     public string $cta = "Learn More";
-    public string $dateTimeFormattedBasic = "DATE ERROR";
-    public string $dateTimeFormattedDetailed = "DATE ERROR";
 
     //RENDERING OPTIONS
     public bool $hideCTA = false;
@@ -50,26 +50,9 @@ class vFeedCard
     public string $cssClassTextColSize = "col col-12 col-md-8 col-lg-9";
     public string $cssClassRight = "";
 
-    public function SetDateTime(DateTime $dateTime) {
-        $this->dateTime = $dateTime;
-        $this->dateTimeFormattedBasic = date_format($this->dateTime,"M j, Y");
-        $this->dateTimeFormattedDetailed = date_format($this->dateTime,"M j, Y H:i:s");
-    }
-    public function SetDateTimeFromString(string $dateTimeString)
-    {
-
-        $this->dateTime = date_create($dateTimeString);
-
-        $this->SetDateTime($this->dateTime);
-    }
-
-    public function Validate()
-    {
-    }
-
     public function getURL()
     {
-        return "/".$this->url;
+        return $this->url;
     }
 
     public function getAccountLinks() : string {
@@ -79,7 +62,7 @@ class vFeedCard
         $totalAccounts = count($accounts);
     
         foreach ($accounts as $index => $account) {
-            $html .= $account->getAccountButton();
+            $html .= $account->getAccountElement();
             if ($index < $totalAccounts - 1) {
                 $html .= ' and ';
             }

@@ -9,6 +9,7 @@ use Kickback\Views\vActivity;
 use Kickback\Views\vRecordId;
 use Kickback\Views\vAccount;
 use Kickback\Views\vMedia;
+use Kickback\Views\vDateTime;
 
 class ActivityController
 {
@@ -43,14 +44,24 @@ class ActivityController
         $activity->name = $row["event_name"];
         $activity->team = $row["event_team"];
         $activity->character = $row["event_character"];
-        $activity->characterWasRandom = $row["event_character_was_random"];
-        $activity->SetDateTime($row["event_date"]);
+        $activity->characterWasRandom = is_null($row["event_character_was_random"]) ? null : $row["event_character_was_random"] == 1 ;
+
+        $eventDate = new vDateTime();
+        $eventDate->setDateTimeFromString($row["event_date"]);
+
+        $activity->dateTime = $eventDate;
 
         if ($row['event_icon_id'] != null)
         {
             $icon = new vMedia('', $row["event_icon_id"]);
-            $icon->mediaPath = $row['event_icon_path'];
+            $icon->setMediaPath($row['event_icon_path']);
             $activity->icon = $icon;
+        }
+        else
+        {
+
+            $otherAccount = new vAccount('',$activity->nameId);
+            $activity->icon = $otherAccount->avatar;
         }
 
         $activity->url = $row["event_url"];

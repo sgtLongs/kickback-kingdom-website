@@ -140,7 +140,7 @@ class QuoteController
 
             // Hammurabi
             [
-                "text" => "The first duty of government is to protect the powerless from the powerful.",
+                "text" => "Then Anu and Bel called by name me, Hammurabi, the exalted prince, who feared God, to bring about the rule of righteousness in the land, to destroy the wicked and the evil-doers; so that the strong should not harm the weak.",
                 "image" => "avatar/297.png",
                 "author" => "Hammurabi",
                 "date" => "1772 BC"
@@ -150,6 +150,7 @@ class QuoteController
 
 
         $randomIndex = array_rand($quotes);
+        //$randomIndex = count($quotes)-1;
         $quoteData = $quotes[$randomIndex];
 
         $quote = new vQuote();
@@ -158,7 +159,7 @@ class QuoteController
         $quote->date = $quoteData["date"];
 
         $media = new vMedia();
-        $media->mediaPath = $quoteData["image"];
+        $media->setMediaPath($quoteData["image"]);
         $quote->icon = $media;
         return $quote;
     }
