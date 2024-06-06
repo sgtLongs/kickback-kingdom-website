@@ -1,16 +1,20 @@
-<?php 
+<?php
 declare(strict_types=1);
 
-namespace Kickback\Models;
-use Kickback\Views\vRecordId;
+namespace Kickback\Views;
 
-class ForeignRecordId extends vRecordId
+use Kickback\Views\vAccount;
+
+class vQuestApplicant extends vRecordId
 {
-    
+    public vAccount $account;
+
     function __construct(string $ctime = '', int $crand = -1)
     {
         parent::__construct($ctime, $crand);
     }
 }
+
+
 
 ?>
