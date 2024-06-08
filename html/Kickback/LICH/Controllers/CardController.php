@@ -24,7 +24,18 @@ class CardController extends BaseController
     {
         $stmt = "INSERT INTO lich_card (ctime, crand, name, description, cost, type, team, card_image_id)VALUES(?,?,?,?,?,?,?,?);";
 
-        $params = [];
+        $params = [$card->ctime, $card->crand, $card->name, $card->description, $card->cost, $card->type, $card->team, $card->card_card_images];
+
+        $cardResp = new Response(false, "Unkown Error In Adding Card To Database", null);
+
+        try
+        {
+            
+        }
+        catch(Exception $e)
+        {
+
+        }
         
     }
 
