@@ -34,7 +34,7 @@ class CardController extends BaseController
 
         $params = [$card->ctime, $card->crand];
 
-        $cardResp = new Response(false, "Unkown Error In Getting Card. ".BaseController::printIdDebugInfo(["Card"=>$card]);
+        $cardResp = new Response(false, "Unkown Error In Getting Card. ".BaseController::printIdDebugInfo(["Card"=>$card]));
 
         try
         {

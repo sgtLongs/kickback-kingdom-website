@@ -1,17 +1,18 @@
 <?php
+declare(strict_types=1);
 
-namespace Kickback\LICH;
+namespace Kickback\LICH\Models;
 
-use Kickback\Models\RecordId;
+use \Kickback\Models\RecordId;
 
 class Card extends RecordId
 {
-    string $name;
-    string $description;
-    int $cost;
-    string $type;
-    string $team;
-    int $cardImageId;
+    public string $name;
+    public string $description;
+    public int $cost;
+    public string $type;
+    public string $team;
+    public int $cardImageId;
 
     public function __construct($name, $description, $cost, $type, $team, $cardImageId)
     {
