@@ -1,17 +1,19 @@
 <?php
 declare(strict_types=1);
 
-use \Kickback\LICH\Controllers\CardController;
-
-use \Kickback\LICH\Views\vCard;
-
-use \Kickback\Views\vMedia;
 
 require_once(($_SERVER["DOCUMENT_ROOT"] ?: __DIR__) . "/Kickback/init.php");
 
 $session = require(\Kickback\SCRIPT_ROOT . "/api/v1/engine/session/verifySession.php");
 require("php-components/base-page-pull-active-account-info.php");
 
+use \Kickback\LICH\Controllers\CardController;
+
+use \Kickback\LICH\Views\vCard;
+
+use \Kickback\Views\vMedia;
+
+use \Kickback\Utilities\FormToken;
 
 
 if (isset($_GET['locator']))
@@ -53,9 +55,11 @@ else
 
                     <div class="col-md-6">
                         <div class="form-section">
-                            <form>
+                            <form method="POST" action="">
+                                <?php FormToken::registerForm();?>
+
                                 <div class="form-row">
-                                    `<div class="form-group">
+                                    <div class="form-group">
                                         <label for="cardName">Name</label>
                                         <input type="text" class="form-control" id="cardName" placeholder="Enter card name" value=<?= $thisCard->name?>>
                                     </div>
@@ -97,10 +101,9 @@ else
                     </div>
                     
                     <div class="col-md-6">
-                            <img src=<?=$thisCard->mediaPath?> alt="Card Image" class="card-image" id="cardImage">
+                            <img src=<?=$thisCard->mediaPath?> alt="Card Image" class="card-image" id="cardImage" style="width: 500px; height: 700px; object-fit: cover;">
                     </div>
                 </div>
-
             </div>
             <?php require("php-components/base-page-footer.php"); ?>
     </main>
