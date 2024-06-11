@@ -47,6 +47,11 @@ class BaseController
         var_dump($response->data);
         echo "<br><br>";
     }
+
+    protected static function loadParams()
+    {
+        
+    }
 }
 
 ?>

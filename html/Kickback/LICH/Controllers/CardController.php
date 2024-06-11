@@ -15,9 +15,43 @@ use \Kickback\Models\Response;
 class CardController extends BaseController
 {
 
+
     public function __construct()
     {
+    }
 
+    public static function getCardByLocator(string $locator)
+    {
+
+        $stmt = "SELECT ctime, crand, name, locator, description, cost, type, team, mediaPath FROM v_lich_card WHERE locator = ? LIMIT 1;";
+
+        $param = [$locator];
+
+        $cardResp = new Response(false, "Unkown Error In Getting Card By Locator. Locator : ".$locator, null);
+
+        try
+        {
+            $result = Database::executeSqlQuery($stmt, $params);
+
+            if($result->num_rows > 0)
+            {
+                $card = CardController::resultToVCard($result);
+
+                $cardResp->success = true;
+                $cardResp->message = "Card Found With Locator ".$locator;
+                $careResp->data = $card;
+            }
+            else
+            {
+                $cardResp->message = "Card Not Found With Locator ".$locator;
+            }
+        }
+        catch(Exception $e)
+        {
+            $cardResp->message = "Error In Execting Sql Query To Get Card By Locator. Locator : ".$locator;
+        }
+
+        return $cardResp;
     }
 
     public static function commitCard(mixed $card)
@@ -52,9 +86,9 @@ class CardController extends BaseController
 
     public static function addCard(Card $card)
     {
-        $stmt = "INSERT INTO lich_card (ctime, crand, name, description, cost, type, team, card_image_id)VALUES(?,?,?,?,?,?,?,?);";
+        $stmt = "INSERT INTO lich_card (ctime, crand, name, locator, description, cost, type, team, card_image_id)VALUES(?,?,?,?,?,?,?,?);";
 
-        $params = [$card->ctime, $card->crand, $card->name, $card->description, $card->cost, $card->type, $card->team, $card->card_card_images];
+        $params = [$card->ctime, $card->crand, $card->name, $card->locator, $card->description, $card->cost, $card->type, $card->team, $card->card_card_images];
 
         $cardResp = new Response(false, "Unkown Error In Adding Card To Database. ".BaseController::printIdDebugInfo(["card"=>$card]), null);
 
@@ -86,9 +120,9 @@ class CardController extends BaseController
 
     public static function updateCard(vCard $card)
     {
-        $stmt = "UPDATE card SET name = ?, description = ?, cost = ?, type = ?, team = ?, card_image_id = ? WHERE ctime = ? AND crand = ?;";
+        $stmt = "UPDATE card SET name = ?, locator = ?, description = ?, cost = ?, type = ?, team = ?, card_image_id = ? WHERE ctime = ? AND crand = ?;";
 
-        $params = [$card->name, $card->description, $card->cost, $card->type, $card->team, $card->cardImageId, $card->ctime, $card->crand];
+        $params = [$card->name, $card->locator, $card->description, $card->cost, $card->type, $card->team, $card->cardImageId, $card->ctime, $card->crand];
 
         $cardResp = new Response(false, "Unkown Error In Updating Card. ".BaseController::printIdDebugInfo(["card"=>$card]), null);
 
@@ -176,7 +210,7 @@ class CardController extends BaseController
 
     public static function getCard(Card $card)
     {
-        $stmt = "SELECT card_ctime, card_crand, name, description, cost, type, team, mediaPath FROM v_lich_card WHERE card_ctime = ? AND card_crand = ? LIMIT 1";
+        $stmt = "SELECT card_ctime, card_crand, name, locator, description, cost, type, team, mediaPath FROM v_lich_card WHERE card_ctime = ? AND card_crand = ? LIMIT 1";
 
         $params = [$card->ctime, $card->crand];
 
@@ -209,7 +243,7 @@ class CardController extends BaseController
 
     public static function resultToVCard(array $row)
     {
-        $card = vCard($row["ctime"], $row["crand"], $row["name"], $row["description"], $row["cost"], $row["type"], $row["team"], $row["mediaPath"]);
+        $card = new vCard($row["ctime"], $row["crand"], $row["name"], $row["locator"], $row["description"], $row["cost"], $row["type"], $row["team"], $row["mediaPath"]);
     
         return $card;
     }

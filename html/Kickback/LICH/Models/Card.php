@@ -8,6 +8,7 @@ use \Kickback\Models\RecordId;
 class Card extends RecordId
 {
     public string $name;
+    public string $locator;
     public string $description;
     public int $cost;
     public string $type;
