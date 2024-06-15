@@ -66,6 +66,14 @@ if(isset($thisStore))
     $pageVisitId = '/market/';
 }
 
+if(isset($thisCard))
+{
+    $pageTitle = "Lich Card Editor";
+    //$pageImage = ;
+    $pageDesc = "The Offical Card Editor of L.I.C.H. used for submission of possible new cards";
+    $pageVisitId = '/lichCardEditor/';
+}
+
 
 
 RecordPageVisit($pageVisitId);

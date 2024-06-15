@@ -43,7 +43,7 @@ class FormToken {
         return $_SESSION["form_token"];
     }
 
-    public static function registerForm() : string {
+    public static function registerForm() {
         echo "<input type='hidden' name='form_token' value='".self::getFormToken()."'>";
     }
 }
