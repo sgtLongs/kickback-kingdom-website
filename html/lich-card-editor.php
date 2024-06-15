@@ -12,6 +12,7 @@ use \Kickback\LICH\Controllers\CardController;
 use \Kickback\LICH\Views\vCard;
 
 use \Kickback\Views\vMedia;
+use \Kickback\Views\vRecordId;
 
 use \Kickback\Utilities\FormToken;
 
@@ -24,7 +25,7 @@ if (isset($_GET['locator']))
 }
 else
 {
-    $thisCard = new vCard("", -1, "", "",  0, "ACT", "Other", "/assets/media/items/221.png");
+    $thisCard = new vCard("", -1, "test", "test", "test",  0, "ACT", "Lich", "/assets/media/items/221.png", 221);
 }
 
 ?>
@@ -57,38 +58,42 @@ else
                         <div class="form-section">
                             <form method="POST" action="">
                                 <?php FormToken::registerForm();?>
-
+                                <input type="hidden" name="commitCardForm" value="true">
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label for="cardName">Name</label>
-                                        <input type="text" class="form-control" id="cardName" placeholder="Enter card name" value=<?= $thisCard->name?>>
+                                        <input name="cardName" type="text" class="form-control" id="cardName" placeholder="Enter card name" value=<?= $thisCard->name?>>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cardLocator">Locator</label>
+                                        <input name="cardLocator" type="text" class="form-control" id="cardLocator" placeholder="Enter card name" value=<?= $thisCard->locator?>>
                                     </div>
                                     <div class="form-group">
                                         <label for="cardDescription">Description</label>
-                                        <textarea class="form-control" id="cardDescription" rows="3" placeholder="Enter card description" value=<?=$thisCard->description?>></textarea>
+                                        <textarea name="cardDescription" class="form-control" id="cardDescription" rows="3" placeholder="Enter card description"><?=$thisCard->description?></textarea>
                                     </div>
                                     <div class="form-group">
                                         <label for="cardCost">Cost</label>
-                                        <input type="number" class="form-control" id="cardCost" placeholder="Enter card cost" value=<?=$thisCard->cost?>>
+                                        <input name="cardCost" type="number" class="form-control" id="cardCost" placeholder="Enter card cost" value=<?=$thisCard->cost?>>
                                     </div>
                                     <div class="form-group">
                                         <label for="cardType">Type</label>
-                                        <select class="form-control" id="cardType">
+                                        <select name="cardType" class="form-control" id="cardType">
                                             <option value="ACT">ACT</option>
                                             <option value="DEF">DEF</option>
                                         </select>
                                     </div>
                                     <div class="form-group">
                                         <label for="cardTeam">Team</label>
-                                        <select class="form-control" id="cardTeam">
-                                            <option value="Hunter">Hunter</option>
-                                            <option value="Lich">Lich</option>
-                                            <option value="Other">Other</option>
+                                        <select name="cardTeam" class="form-control" id="cardTeam">
+                                            <option value="Hunter" <?= $thisCard->team === 'Hunter' ? 'selected' : '' ?>>Hunter</option>
+                                            <option value="Lich" <?= $thisCard->team === 'Lich' ? 'selected' : '' ?>>Lich</option>
+                                            <option value="Other" <?= $thisCard->team === 'Other' ? 'selected' : '' ?>>Other</option>
                                         </select>
                                     </div>
                                     <div class="form-group">
                                         <label for="cardImageId">Card Image ID</label>
-                                        <input type="number" class="form-control" id="cardImageId" placeholder="Enter card image ID">
+                                        <input name="cardImageId" type="number" class="form-control" id="cardImageId" placeholder="Enter card image ID" value=<?=$thisCard->imageId?>>
                                     </div>
                                 </div>
                                 

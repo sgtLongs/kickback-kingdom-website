@@ -9,12 +9,14 @@ use \Kickback\LICH\Controllers\BaseController;
 use \Kickback\LICH\Models\Card;
 
 use \Kickback\LICH\Views\vCard;
+use \Kickback\Views\vRecordId;
 
 use \Kickback\Models\Response;
 
 class CardController extends BaseController
 {
-
+    public static string $allViewColumns = "ctime, crand, name, locator, description, cost, type, team, mediaPath, image_id";
+    public static string $allTableColumns = "ctime, crand, name, locator, description, cost, type, team, image_id";
 
     public function __construct()
     {
@@ -23,9 +25,9 @@ class CardController extends BaseController
     public static function getCardByLocator(string $locator)
     {
 
-        $stmt = "SELECT ctime, crand, name, locator, description, cost, type, team, mediaPath FROM v_lich_card WHERE locator = ? LIMIT 1;";
+        $stmt = "SELECT ".CardController::$allViewColumns." FROM v_lich_card WHERE locator = ? LIMIT 1;";
 
-        $param = [$locator];
+        $params = [$locator];
 
         $cardResp = new Response(false, "Unkown Error In Getting Card By Locator. Locator : ".$locator, null);
 
@@ -35,11 +37,13 @@ class CardController extends BaseController
 
             if($result->num_rows > 0)
             {
-                $card = CardController::resultToVCard($result);
+                $card = CardController::resultToVCard($result->fetch_assoc());
 
                 $cardResp->success = true;
                 $cardResp->message = "Card Found With Locator ".$locator;
-                $careResp->data = $card;
+                $cardResp->data = $card;
+
+                
             }
             else
             {
@@ -54,21 +58,24 @@ class CardController extends BaseController
         return $cardResp;
     }
 
-    public static function commitCard(mixed $card)
+    public static function commitCard(Card $card)
     {
         $cardResp = new Response(false, "Unkown Error In Commiting Card. ".BaseController::printIdDebugInfo(["card"=>$card]));
 
-        if($card instanceof Card)
+        $getCardResp = CardController::getCardByLocator($card->locator);
+
+        if($getCardResp->success == true)
         {
-            $cardResp = CardController::addCard($card);   
-        }
-        elseif($card instanceof vCard)
-        {
-            $cardResp = CardController::updateCard($card)
+            $ctime = $getCardResp->data->ctime;
+            $crand = $getCardResp->data->crand;
+
+            $vCard = new vCard($ctime, $crand, $card->name, $card->locator, $card->description, $card->cost, $card->type, $card->team, "", $card->imageId);
+
+            $cardResp = CardController::updateCard($vCard);   
         }
         else
         {
-            $cardResp->message = "Invalid Type Given To CardController::commitCard(). Type of :"get_class($card); 
+            $cardResp = CardController::addCard($card);   
         }
 
         if($cardResp->success = true)
@@ -86,9 +93,9 @@ class CardController extends BaseController
 
     public static function addCard(Card $card)
     {
-        $stmt = "INSERT INTO lich_card (ctime, crand, name, locator, description, cost, type, team, card_image_id)VALUES(?,?,?,?,?,?,?,?);";
+        $stmt = "INSERT INTO lich_card (ctime, crand, name, locator, description, cost, type, team, image_id)VALUES(?,?,?,?,?,?,?,?,?);";
 
-        $params = [$card->ctime, $card->crand, $card->name, $card->locator, $card->description, $card->cost, $card->type, $card->team, $card->card_card_images];
+        $params = [$card->ctime, $card->crand, $card->name, $card->locator, $card->description, $card->cost, $card->type, $card->team, $card->imageId];
 
         $cardResp = new Response(false, "Unkown Error In Adding Card To Database. ".BaseController::printIdDebugInfo(["card"=>$card]), null);
 
@@ -96,17 +103,19 @@ class CardController extends BaseController
         {
             Database::executeSqlQuery($stmt, $params);
 
-            $cardExistsResp = CardController::doesCardExist($card)
+            $cardExistsResp = CardController::doesCardExist($card);
 
             if($cardExistsResp->data)
             {
                 $cardResp->success = true;
-                $cardResp->message = "Card Added To Database":
+                $cardResp->message = "Card Added To Database";
                 $cardResp->data = $card;
+
+                
             }
             else
             {
-                $cardResp->message = "Card Not Added To Database.".BaseController::printIdDebugInfo(["card"=>$card]);;
+                $cardResp->message = "Card Not Added To Database.".BaseController::printIdDebugInfo(["card"=>$card]);
             }
             
         }
@@ -120,9 +129,9 @@ class CardController extends BaseController
 
     public static function updateCard(vCard $card)
     {
-        $stmt = "UPDATE card SET name = ?, locator = ?, description = ?, cost = ?, type = ?, team = ?, card_image_id = ? WHERE ctime = ? AND crand = ?;";
+        $stmt = "UPDATE lich_card SET name = ?, locator = ?, description = ?, cost = ?, type = ?, team = ?, image_id = ? WHERE ctime = ? AND crand = ?;";
 
-        $params = [$card->name, $card->locator, $card->description, $card->cost, $card->type, $card->team, $card->cardImageId, $card->ctime, $card->crand];
+        $params = [$card->name, $card->locator, $card->description, $card->cost, $card->type, $card->team, $card->imageId, $card->ctime, $card->crand];
 
         $cardResp = new Response(false, "Unkown Error In Updating Card. ".BaseController::printIdDebugInfo(["card"=>$card]), null);
 
@@ -133,6 +142,8 @@ class CardController extends BaseController
             $cardResp->success = true;
             $cardResp->message = "Card Updated";
             $cardResp->data = $card;
+
+            BaseController::logToFile($card);
         }
         catch(Exception $e)
         {
@@ -177,7 +188,7 @@ class CardController extends BaseController
 
     public static function doesCardExist(vRecordId $cardId)
     {
-        $stmt = "SELECT ctime, crand FROM card WHERE ctime = ? AND crand = ? LIMIT 1";
+        $stmt = "SELECT ctime, crand FROM lich_card WHERE ctime = ? AND crand = ? LIMIT 1";
 
         $params = [$cardId->ctime, $cardId->crand];
 
@@ -243,7 +254,7 @@ class CardController extends BaseController
 
     public static function resultToVCard(array $row)
     {
-        $card = new vCard($row["ctime"], $row["crand"], $row["name"], $row["locator"], $row["description"], $row["cost"], $row["type"], $row["team"], $row["mediaPath"]);
+        $card = new vCard($row["ctime"], $row["crand"], $row["name"], $row["locator"], $row["description"], $row["cost"], $row["type"], $row["team"], $row["mediaPath"], $row["image_id"]);
     
         return $card;
     }

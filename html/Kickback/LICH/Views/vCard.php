@@ -14,17 +14,20 @@ class vCard extends vRecordId
     public string $type;
     public string $team;
     public string $mediaPath;
+    public int $imageId;
 
-    public function __construct($ctime, $crand, $name, $description, $cost, $type, $team, $mediaPath)
+    public function __construct($ctime, $crand, $name, $locator, $description, $cost, $type, $team, $mediaPath, $imageId)
     {
         parent::__construct($ctime, $crand);
         
         $this->name = $name;
+        $this->locator = $locator;
         $this->description = $description;
         $this->cost = $cost;
         $this->type = $type;
         $this->team = $team;
         $this->mediaPath = $mediaPath;
+        $this->imageId = $imageId;
     
     }
 }

@@ -13,17 +13,19 @@ class Card extends RecordId
     public int $cost;
     public string $type;
     public string $team;
-    public int $cardImageId;
+    public int $imageId;
 
-    public function __construct($name, $description, $cost, $type, $team, $cardImageId)
+    public function __construct($name, $locator, $description, $cost, $type, $team, $imageId)
     {
         parent::__construct();
 
         $this->name = $name;
+        $this->locator = $locator;
         $this->description = $description;
         $this->cost = $cost;
         $this->type = $type;
-        $this->cardImageId = $cardImageId;
+        $this->team = $team;
+        $this->imageId = $imageId;
     }
 
 
