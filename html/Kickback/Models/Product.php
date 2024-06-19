@@ -10,12 +10,12 @@ class Product extends RecordId
     public string $name;
     public ForeignRecordId $storeId;
 
-    function __construct(string $productName, ForeignRecordId $store)
+    function __construct(string $productName, string $storeCtime, int $storeCrand)
     {
         parent::__construct();
 
         $this->name = $productName;
-        $this->storeId = $store;
+        $this->storeId = new ForeignRecordId($storeCtime, $storeCrand);
 
     }
 }

@@ -2,6 +2,8 @@
 declare(strict_types=1);
 
 namespace Kickback\Controllers;
+
+
 use \Kickback\Services\Database;
 
 use \Kickback\Views\vRecordId;
@@ -17,6 +19,9 @@ use \Kickback\Models\ForeignRecordId;
 class StoreController extends BaseController
 {
 
+    static string $allTableColumns = 'ctime, crand, name, locator, ref_account_ctime, ref_account_crand';
+    static string $allViewColumns = 'ctime, crand, name, locator, ref_account_ctime, ref_account_crand';
+
     function __construct()
     {
 
@@ -26,8 +31,7 @@ class StoreController extends BaseController
     {
         $testStoreId = new vRecordId("2024-04-23 08:54:36", 887940953);
 
-        $testOwner = StoreController::getTestOwner();
-        $testAddStore = new Store("test_store_add_store", $testOwner);
+        $testAddStore = new Store("test_store_add_store", "test_locator","2022-10-06 16:46:07", 1);
 
         BaseController::runTest([StoreController::class, 'getStore'], [$testStoreId]);
         BaseController::runTest([StoreController::class, 'addStore'], [$testAddStore]);
@@ -35,18 +39,9 @@ class StoreController extends BaseController
         BaseController::runTest([StoreController::class, 'removeStore'], [$testAddStore]);
     }
 
-    public static function getTestOwner()
-    {
-        $testAccount = new vAccount( "2022-10-06 16:46:07", 1);
-        $accountResp = AccountController::getAccountById($testAccount);
-        $testOwner = new ForeignRecordId($accountResp->data->ctime, $accountResp->data->crand);
-
-        return $testOwner;
-    }
-
     public static function getStore(vRecordId $storeId) : Response
     {
-        $stmt = "SELECT store_ctime, store_crand, store_name, ref_account_ctime, ref_account_crand FROM store WHERE store_ctime = ? AND store_crand = ? LIMIT 1";
+        $stmt = "SELECT ".StoreController::$allTableColumns." FROM v_store WHERE ctime = ? AND crand = ? LIMIT 1";
         $params = [$storeId->ctime, $storeId->crand];
 
         $storeResp = new Response(false, "Unkown Error Occured In Attempting To Get Store", null);
@@ -55,10 +50,8 @@ class StoreController extends BaseController
         {
             $result = Database::executeSqlQuery($stmt, $params);
             $row = $result->fetch_assoc();
- 
-            $storeOwner = new ForeignRecordId($row["ref_account_ctime"], $row["ref_account_crand"]);
-            $returnedStoreId = new vRecordId($row["store_ctime"], $row["store_crand"]);
-            $returnedStore = new vStore($returnedStoreId, $row["store_name"], $storeOwner);
+
+            $returnedStore = StoreController::rowToVStore($row);
 
             if($result->num_rows > 0)
             {
@@ -73,7 +66,7 @@ class StoreController extends BaseController
         }
         catch(Exception $e)
         {
-            $storeResp->message = "Failed To Execute Sql Query ".StoreController::printIdDebugInfo($storeId, $e);
+            $storeResp->message = "Failed To Execute Sql Query ".StoreController::printIdDebugInfo(['store'=>$storeId], $e);
         }
 
         return $storeResp;
@@ -84,14 +77,15 @@ class StoreController extends BaseController
     {
         $stmt = "
         INSERT INTO store 
-        (store_ctime, 
-        store_crand, 
-        store_name, 
+        (ctime, 
+        crand, 
+        name, 
+        locator,
         ref_account_ctime, 
         ref_account_crand) 
         VALUES (?,?,?,?,?)";
 
-        $params = [$store->ctime, $store->crand, $store->name, $store->ownerId->ctime, $store->ownerId->crand];
+        $params = [$store->ctime, $store->crand, $store->name, $store->locator, $store->ownerId->ctime, $store->ownerId->crand];
 
         $storeResp = new Response(False, "Unknown Error When Trying to Add Store", null);
 
@@ -122,7 +116,7 @@ class StoreController extends BaseController
 
     public static function removeStore(vRecordId $storeId) : Response
     {
-        $stmt = "DELETE FROM store WHERE store_ctime = ? AND store_crand = ?";
+        $stmt = "DELETE FROM v_store WHERE ctime = ? AND crand = ?";
 
         $params = [$storeId->ctime, $storeId->crand];
 
@@ -149,7 +143,7 @@ class StoreController extends BaseController
         } 
         catch (Exception $e) 
         {
-           $storeResp->message = "Error In Executing Sql Query To Remove Store".BaseController::printIdDebugInfo($storeId); 
+           $storeResp->message = "Error In Executing Sql Query To Remove Store".BaseController::printIdDebugInfo(['store'=>$storeId]); 
         }
 
         return $storeResp;        
@@ -158,11 +152,11 @@ class StoreController extends BaseController
 
     public static function doesStoreExist(vRecordId $storeId) : Response
     {
-        $stmt = "SELECT store_ctime FROM store WHERE store_ctime = ? AND store_crand = ? LIMIT 1";
+        $stmt = "SELECT ctime FROM v_store WHERE ctime = ? AND crand = ? LIMIT 1";
 
         $params = [$storeId->ctime, $storeId->crand];
 
-        $storeResp = new Response(false, "Unkown Error In Checking If Store Exists. ".BaseController::printIdDebugInfo($storeId), null);
+        $storeResp = new Response(false, "Unkown Error In Checking If Store Exists. ".BaseController::printIdDebugInfo(['store'=>$storeId]), null);
 
         try
         {
@@ -184,10 +178,53 @@ class StoreController extends BaseController
         } 
         catch (Exception $e) 
         {
-            $storeResp->message = "Error In Executing Sql Statement. ".BaseController::printIdDebugInfo($storeId);
+            $storeResp->message = "Error In Executing Sql Statement. ".BaseController::printIdDebugInfo(['store'=>$storeId]);
         }
 
         return $storeResp;
+    }
+
+    public static function getStoreByLocator(string $locator)
+    {
+        $stmt = "SELECT ".StoreController::$allViewColumns." FROM v_store WHERE locator = ?;";
+
+        $params = [$locator];
+
+        $storeResp = new Response(false,"Unkown Erorr In Getting Store By Locator : ".$locator,null);
+
+        try
+        {
+
+            $result = Database::executeSqlQuery($stmt, $params);
+
+            if($result->num_rows > 0)
+            {
+                $store = StoreController::rowToVStore($result->fetch_assoc());
+
+                $storeResp->success = true;
+                $storeResp->message = "Successfully Got Store with Locator : ".$locator;
+                $storeResp->data = $store;
+            }
+            else
+            {
+                $storeResp->message = "Store not found with locator : ".$locator;
+            }
+
+        }
+        catch(Exception $e)
+        {
+            $storeResp->message = "Error In Executing Sql Query To Get Store with locator : ".$locator;
+        }
+
+        return $storeResp;
+    }
+
+
+    public static function rowToVStore(array $row)
+    {
+        $store = new vStore($row["ctime"], $row['crand'], $row['name'], $row['locator'], $row['ref_account_ctime'], $row['ref_account_crand']);
+
+        return $store;
     }
 
 }

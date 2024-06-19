@@ -8,15 +8,30 @@ use Kickback\Models\ForeignRecordId;
 
 class vCartProductLink extends vRecordId
 {
-    public ForeignRecordId $cartId;
-    public ForeignRecordId $productId;
+    public string $productName;
+    public string $username;
+    public string $description;
+    public vPrice $price;
+    public vMedia $media;
+    public vRecordId $cartId;
+    public vRecordId $productId;
+    public vRecordId $accountId;
 
-    public function __construct(vRecordId $cartProductLink, ForeignRecordId $product, ForeignRecordId $cart)
+    public function __construct(string $ctime, int $crand, string $productName, string $username, string $description, string $price, string $mediaPath, vRecordId $mediaId, vRecordId $cartId, vRecordId $productId, vRecordId $accountId)
     {
-        parent::__construct($cartProductLink->ctime, $cartProductLink->crand);
+        parent::__construct($ctime, $crand);
 
-        $this->cartId = $cart;
-        $this->productId = $product;
+        $this->productName = $productName;
+        $this->username = $username;
+        $this->cartId = $cartId;
+        $this->productId = $productId;
+        $this->accountId = $accountId;
+        $this->description = $description;
+        $this->price = new vPrice($price);
+
+        $this->media = new vMedia($mediaId->ctime, $mediaId->crand);
+        $this->media->setMediaPath($mediaPath);
+
     }
 }
 

@@ -19,6 +19,12 @@ use Kickback\Views\vCartProductLink;
 class CartController extends BaseController
 {
 
+    public static string $allViewColumns = 'ctime, crand, ref_store_ctime, ref_store_crand, ref_account_ctime, ref_account_crand';
+    public static string $allTableColumns = 'ctime, crand, ref_store_ctime, ref_store_crand, ref_account_ctime, ref_account_crand';
+
+    public static string $allLinkViewColumns = 'ctime, crand, product_name, username, description, price, mediaPath, ref_media_ctime, ref_media_crand, ref_cart_ctime, ref_cart_crand, ref_product_ctime, ref_product_crand, ref_account_ctime, ref_account_crand';
+    public static string $allLinkTableColumns = 'ctime, crand, ref_cart_ctime, ref_cart_crand, ref_product_ctime, ref_product_crand';
+
     function __construct()
     {
 
@@ -87,11 +93,9 @@ class CartController extends BaseController
         return $infoMessage;  
     }
 
-    
-
     public static function doesCartExist(vRecordId $cart)
     {
-        $stmt = "SELECT cart_ctime FROM cart WHERE cart_ctime = ? and cart_crand = ? LIMIT 1";
+        $stmt = "SELECT ctime FROM cart WHERE ctime = ? and crand = ? LIMIT 1";
 
         $params = [$cart->ctime, $cart->crand];
 
@@ -125,7 +129,7 @@ class CartController extends BaseController
 
     public static function getCart(vRecordId $cart)
     {
-        $stmt = "SELECT cart_ctime, cart_crand, ref_store_ctime, ref_store_crand, ref_account_ctime, ref_account_crand FROM cart WHERE cart_ctime = ? AND cart_crand = ? LIMIT 1";
+        $stmt = "SELECT ".CartController::$allTableColumns." FROM cart WHERE ctime = ? AND crand = ? LIMIT 1";
 
         $params = [$cart->ctime, $cart->crand];
 
@@ -141,11 +145,7 @@ class CartController extends BaseController
             {
                 $row = $result->fetch_assoc();
 
-                $foundCartId = new vRecordId($row["cart_ctime"], $row["cart_crand"], );
-                $foundStoreId= new ForeignRecordId($row["ref_store_ctime"], $row["ref_store_crand"]);
-                $foundAccountId = new ForeignRecordId($row["ref_account_ctime"], $row["ref_account_crand"]);
-
-                $foundCart = new vCart($foundCartId, $foundStoreId, $foundAccountId);
+                $foundCart = CartController::rowToVCart($row);
 
                 $cartResp->success = true;
                 $cartResp->message = "Cart Successfully Found";
@@ -166,7 +166,7 @@ class CartController extends BaseController
 
     public static function addCart(Cart $cart)
     {
-        $stmt = "INSERT INTO cart (cart_ctime, cart_crand, ref_store_ctime, ref_store_crand, ref_account_ctime, ref_account_crand) VALUES (?,?,?,?,?,?)";
+        $stmt = "INSERT INTO cart (".CartController::$allTableColumns.") VALUES (?,?,?,?,?,?)";
         $params = [$cart->ctime, $cart->crand, $cart->storeId->ctime, $cart->storeId->crand, $cart->accountId->ctime, $cart->accountId->crand];
 
         $cartResp = new Response(false, "Unkown Error In Adding Cart. ".CartController::printCartIdDebugInfo($cart), null);
@@ -228,11 +228,9 @@ class CartController extends BaseController
         return $cartResp;
     }
 
-    
-
     public static function doesCartProductLinkExist(vRecordId $link)
     {
-        $stmt = "SELECT link_ctime FROM cart_product_link WHERE link_ctime = ? AND link_crand = ? LIMIT 1";
+        $stmt = "SELECT ctime FROM v_cart_product_link WHERE ctime = ? AND crand = ? LIMIT 1";
 
         $params = [$link->ctime, $link->crand];
 
@@ -305,7 +303,7 @@ class CartController extends BaseController
 
     public static function removeCartProductLink(vRecordId $link)
     {
-        $stmt = "DELETE FROM cart_product_link WHERE link_ctime = ? AND link_crand = ?";
+        $stmt = "DELETE FROM cart_product_link WHERE ctime = ? AND crand = ?";
 
         $params = [$link->ctime, $link->crand];
 
@@ -335,11 +333,11 @@ class CartController extends BaseController
         return $linkResp;
     }
 
-    public static function linkProductToCart(ForeignRecordId $product, ForeignRecordId $cart)
+    public static function linkProductToCart(vRecordId $product, vRecordId $cart)
     {
         $cartProductLink = new CartProductLink($product, $cart);
 
-        $stmt = "INSERT INTO cart_product_link (link_ctime, link_crand, ref_cart_ctime, ref_cart_crand, ref_product_ctime, ref_product_crand) VALUES (?,?,?,?,?,?)";
+        $stmt = "INSERT INTO cart_product_link (".CartController::$allLinkTableColumns.") VALUES (?,?,?,?,?,?);";
 
         $params = [$cartProductLink->ctime, $cartProductLink->crand, $cartProductLink->cartId->ctime, $cartProductLink->cartId->crand, $cartProductLink->productId->ctime, $cartProductLink->productId->crand];
 
@@ -368,6 +366,173 @@ class CartController extends BaseController
         }
 
         return $linkResp;
+    }
+
+    public static function getAccountStoreCart(vRecordId $accountId, vRecordId $storeId)
+    {
+        $stmt = "SELECT ".CartController::$allViewColumns." FROM v_cart WHERE ref_account_ctime = ? AND ref_account_crand = ? AND ref_store_ctime = ? AND ref_store_crand = ? LIMIT 1;";
+
+        $params = [$accountId->ctime, $accountId->crand, $storeId->ctime, $storeId->crand];
+
+        $cartResp = new Response(false, "Unkown Error In Getting Cart For Account For Store".BaseController::printIdDebugInfo(["account"=>$accountId,"store"=>$storeId]), null);
+
+        try
+        {
+            $result = Database::executeSqlQuery($stmt, $params);
+
+            if($result->num_rows > 0)
+            {
+                $cart = CartController::rowToVCart($result->fetch_assoc());
+
+                $cartResp->success = true;
+                $cartResp->message = "Found Cart For Account For Store. ".BaseController::printIdDebugInfo(["account"=>$accountId,"store"=>$storeId]);
+                $cartResp->data = $cart;
+
+                //BaseController::logData("D:/PHPLogs/getAccountStoreCartLog.log", $cart);
+            }
+            else
+            {
+                $cartResp->message = "Cart For Account For Store Not Found. ".BaseController::printIdDebugInfo(["account"=>$accountId,"store"=>$storeId]);
+            }
+        }
+        catch(Exception $e)
+        {
+            $cartResp->message = "Error Executing Sql Query To Get Cart For Account For Store. ".BaseController::printIdDebugInfo(["account"=>$accountId,"store"=>$storeId], $e);
+        }
+
+        return $cartResp;
+    }
+
+    public static function getOrCreateAccountCart(vRecordId $accountId, vRecordId $storeId)
+    {
+        $cartResp = CartController::getAccountStoreCart($accountId, $storeId);
+
+        if($cartResp->success == false)
+        {
+            $cart = new Cart($accountId->ctime, $accountId->crand, $storeId->ctime, $storeId->crand);
+
+            $cartCreateResp = CartController::addCart($cart);
+
+            if($cartCreateResp->success == true)
+            {
+                $vCart = new vCart($cart->ctime, $cart->crand, $accountId->ctime, $accountId->crand, $storeId->ctime, $storeId->crand);
+            
+                $cartResp->message = "Created Cart For Account".BaseController::printIdDebugInfo(["account"=>$accountId, "store"=>$storeId]);
+                $cartResp->data = $vCart;
+
+                return $cartResp;
+            }
+            else
+            {
+                $cartResp->message = "Failed In Creating new Cart For Account".BaseController::printIdDebugInfo(["account"=>$accountId, "store"=>$storeId]);
+
+                return $cartResp;
+            }
+            
+        } 
+
+        return $cartResp;
+    }
+
+    public static function getProductsInCart(vRecordId $cart)
+    {
+        $stmt = "SELECT ".CartController::$allLinkViewColumns." FROM v_cart_product_link WHERE ref_cart_ctime = ? AND ref_cart_crand = ?;";
+
+        $params = [$cart->ctime, $cart->crand];
+
+        $cartResp = new Response(false,"Unkown Error In Getting Products In Cart. ".BaseController::printIdDebugInfo(["cart"=>$cart]),null);
+
+        try
+        {
+            $result = Database::executeSqlQuery($stmt, $params);
+            
+            if($result->num_rows > 0)
+            {
+                $cartArray = [];
+
+                while($row = $result->fetch_assoc())
+                {
+                    $link = CartController::rowToVCartProductLink($row);
+
+                    $cartArray[] = $link;
+                }
+                
+                $cartResp->success = true;
+                $cartResp->message = "Products Found";
+                $cartResp->data = $cartArray;
+            }
+            else
+            {
+                $cartResp->success = true;
+                $cartResp->message = "No Products For Cart Found".BaseController::printIdDebugInfo(["cart"=>$cart]);
+                $cartResp->data = [];
+            }
+
+        }
+        catch(Exception $e)
+        {
+            $cartResp->message = "Error In Executing Sql Query To Get Products in Cart. ".BaseController::printIdDebugInfo(["cart"=>$cart]);
+        }   
+
+        return $cartResp;
+    }
+
+    public static function checkoutCart(vRecordId $cart)
+    {
+        $stmt = "DELETE FROM cart_product_link WHERE ref_cart_ctime = ? AND ref_cart_crand = ?;";
+
+        $params =[$cart->ctime, $cart->crand];
+
+        $cartResp = new Response(false,"Unkown Error In Checkouting Out Card. ".BaseController::printIdDebugInfo(["cart"=>$cart]),null);
+    
+        try
+        {
+            Database::executeSqlQuery($stmt, $params);
+
+            $cartResp = CartController::doesCartExist($cart);
+
+            if($cartResp->data = false)
+            {
+                $cartResp->success = true;
+                $cartResp->message = "Checked Out Cart. ".BaseController::printIdDebugInfo(["cart"=>$cart]);
+            }
+            else
+            {
+                $cartResp->message = "Failed To Checkout Cart. ".BaseController::printIdDebugInfo(["cart"=>$cart]);
+            }
+        }
+        catch(Exception $e)
+        {
+            $cartResp->message = "Error In Executing Sql Query To Checkout Cart. ".BaseController::printIdDebugInfo(["cart"=>$cart]);
+        }
+
+        return $cartResp;
+    }
+
+    public static function rowToVCart(array $row)
+    {
+        $cart = new vCart(
+            $row["ctime"], 
+            $row["crand"], 
+            $row["ref_store_ctime"], 
+            $row["ref_store_crand"], 
+            $row["ref_account_ctime"], 
+            $row["ref_account_crand"]
+        );
+
+        return $cart;
+    }
+
+    public static function rowToVCartProductLink(array $row)
+    {
+        $cartId = new vRecordId($row['ref_cart_ctime'],$row['ref_cart_crand']);
+        $productId = new vRecordId($row['ref_product_ctime'],$row['ref_product_crand']);
+        $accountId = new vRecordId($row['ref_account_ctime'],$row['ref_account_crand']);
+        $mediaId = new vRecordId($row['ref_media_ctime'], $row['ref_media_crand']);
+
+        $cartProductLink = new vCartProductLink($row["ctime"], $row["crand"], $row['product_name'], $row['username'], $row['description'], $row['price'], $row['mediaPath'], $mediaId, $cartId, $productId, $accountId);
+
+        return $cartProductLink;
     }
 
 }

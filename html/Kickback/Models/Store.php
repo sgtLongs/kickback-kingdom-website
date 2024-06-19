@@ -9,13 +9,15 @@ use \Datetime;
 class Store extends RecordId
 {
     public string $name;
+    public string $locator;
     public ForeignRecordId $ownerId;
 
-    function __construct(string $storeName, ForeignRecordId $owner)
+    function __construct(string $name, string $locator, string $ref_account_ctime, int $ref_account_crand)
     {
         parent::__construct();
-        $this->ownerId = $owner;
-        $this->name = $storeName;
+        $this->ownerId = new ForeignRecordId($ref_account_ctime, $ref_account_crand);
+        $this->name = $name;
+        $this->locator = $locator;
     }
 
 }

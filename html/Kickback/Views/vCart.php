@@ -10,12 +10,12 @@ class vCart extends vRecordId
     public ForeignRecordId $storeId;
     public ForeignRecordId $accountId;
 
-    function __construct(vRecordId $cart, ForeignRecordId $store, ForeignRecordId $account)
+    function __construct(string $ctime, int $crand, string $storeCtime, int $storeCrand, string $accountCtime, int $accountCrand)
     {
-        parent::__construct($cart->ctime, $cart->crand);
+        parent::__construct($ctime, $crand);
 
-        $storeId = $store;
-        $accountId = $account;
+        $storeId = new ForeignRecordId($storeCtime, $storeCrand);
+        $accountId = new ForeignRecordId($accountCtime, $accountCrand);
     }
 }
 

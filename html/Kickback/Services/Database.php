@@ -36,5 +36,31 @@ class Database {
 
         return $result;
     }
+
+    public static function executeMultipleSqlQueries(array $stmtParamsPair)
+    {
+        $connection = Database::getConnection();
+
+        // Begin transaction
+        $connection->begin_transaction();
+
+        $results = [];
+
+        try {
+            foreach($stmtParamsPair as $key => $value)
+            {
+                
+            }
+
+            // Commit transaction
+            $connection->commit();
+        } catch (Exception $e) {
+            // Rollback transaction
+            $connection->rollback();
+            throw $e;
+        }
+
+        return true;
+    }
 }
 ?>

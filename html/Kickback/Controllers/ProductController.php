@@ -5,19 +5,21 @@ declare(strict_types=1);
 namespace Kickback\Controllers;
 use Kickback\Services\Database;
 
-use Kickback\Models\Response;
-use Kickback\Models\Product;
-use Kickback\Models\ForeignRecordId;
+use \Kickback\Models\Response;
+use \Kickback\Models\Product;
+use \Kickback\Models\ForeignRecordId;
 
-use Kickback\Views\vRecordId;
-use Kickback\Views\vProduct;
+use \Kickback\Views\vRecordId;
+use \Kickback\Views\vProduct;
+use \Kickback\Views\vPrice;
 
 class ProductController extends BaseController
 {
+    static string $allViewColumns = 'ctime, crand, name, locator, price, description, store_locator, ref_store_ctime, ref_store_crand, ref_media_ctime, ref_media_crand, mediaPath';
+    static string $allTableColumns = 'ctime, crand, name, locator, price, description, ref_store_ctime, ref_store_crand, ref_media_ctime, ref_media_crand';
 
     function __construct()
     {
-
     }
 
     public static function runUnitTests()
@@ -42,7 +44,7 @@ class ProductController extends BaseController
 
         $params = [$product->ctime, $product->crand];
 
-        $productResp = new Response(false, "Unkown Error In Checking If Product Exists. ".BaseController::printIdDebugInfo($product), null);
+        $productResp = new Response(false, "Unkown Error In Checking If Product Exists. ".BaseController::printIdDebugInfo(["product"=>$product]), null);
 
         try 
         {
@@ -64,7 +66,7 @@ class ProductController extends BaseController
         } 
         catch (Exception $e) 
         {
-            $productResp->message = "Error In Executing Sql Query. ".BaseController::printIdDebugInfo($product, $e);
+            $productResp->message = "Error In Executing Sql Query. ".BaseController::printIdDebugInfo(["product"=>$product], $e);
         }
 
         return $productResp;
@@ -76,7 +78,7 @@ class ProductController extends BaseController
 
         $params = [$product->ctime, $product->crand];
 
-        $productResp = new Response(false, "Unkown Error In Getting Product. ".BaseController::printIdDebugInfo($product), null);
+        $productResp = new Response(false, "Unkown Error In Getting Product. ".BaseController::printIdDebugInfo(["product"=>$product]), null);
 
         try 
         {
@@ -101,7 +103,7 @@ class ProductController extends BaseController
         } 
         catch (Exception $e ) 
         {
-            $productResp->message = "Error In Executing Sql Query In Getting Product. ".BaseController::printIdDebugInfo($product, $e);
+            $productResp->message = "Error In Executing Sql Query In Getting Product. ".BaseController::printIdDebugInfo(["product"=>$product], $e);
         }
 
         return $productResp;
@@ -113,7 +115,7 @@ class ProductController extends BaseController
 
         $params = [$product->ctime, $product->crand, $product->name, $product->storeId->ctime, $product->storeId->crand];
 
-        $productResp = new Response(false, "Unkown Error In Adding Product To Store".BaseController::printIdDebugInfo($product)." Store Id : ".BaseController::printIdDebugInfo($product->storeId), null);
+        $productResp = new Response(false, "Unkown Error In Adding Product To Store".BaseController::printIdDebugInfo(["product"=>$product,"store"=>$product->storeId]), null);
 
         try
         {
@@ -130,13 +132,13 @@ class ProductController extends BaseController
             }
             else
             {
-                $productResp->message = "Product Not Added".BaseController::printIdDebugInfo($product)." Store Id : ".BaseController::printIdDebugInfo($product->storeId);
+                $productResp->message = "Product Not Added".BaseController::printIdDebugInfo(["product"=>$product,"store"=>$product->storeId]);
             }
 
         }
         catch(Exception $e)
         {
-            $productResp->message = "Error In Executing Sql Query In Adding Product. ".BaseController::printIdDebugInfo($product)." Store Id : ".BaseController::printIdDebugInfo($product->storeId);
+            $productResp->message = "Error In Executing Sql Query In Adding Product. ".BaseController::printIdDebugInfo(["product"=>$product,"store"=>$product->storeId]);
         }
 
         return $productResp;
@@ -148,7 +150,7 @@ class ProductController extends BaseController
 
         $params = [$product->ctime, $product->crand];
 
-        $productResp = new Response(false, "Unkown Error In Removing Product From Store. ".BaseController::printIdDebugInfo($product)." Store Id : ".BaseController::printIdDebugInfo($product->storeId), null);
+        $productResp = new Response(false, "Unkown Error In Removing Product From Store. ".BaseController::printIdDebugInfo(["product"=>$product,"store"=>$product->storeId]), null);
 
         try
         {
@@ -169,11 +171,100 @@ class ProductController extends BaseController
         }
         catch(Exception $e)
         {
-            $productResp->message = "Error In Executing Sql Query To Remove Store. ".BaseController::printIdDebugInfo($product)." Store Id : ".BaseController::printIdDebugInfo($product->storeId);
+            $productResp->message = "Error In Executing Sql Query To Remove Store. ".BaseController::printIdDebugInfo(["product"=>$product,"store"=>$product->storeId]);
         }
 
         return $productResp;
     }
+
+    public static function getProductByLocator(string $locator)
+    {
+        $stmt = "SELECT ".ProductController::$allViewColumns." FROM v_product WHERE locator = ? LIMIT 1;";
+    
+        $params = [$locator];
+
+        $productResp = new Response(false, "Unkown Error In Getting Product By Locator : ".$locator, null);
+
+        try
+        {
+            $result = Database::executeSqlQuery($stmt, $params);
+
+            if($result->num_rows > 0)
+            {
+
+                $product = ProductController::rowToVProduct($result->fetch_assoc());
+
+                $productResp->success = true;
+                $productResp->message = "Found Product With Locator : ".$locator;
+                $productResp->data = $product;
+
+            }
+            else
+            {
+                $productResp->message = "Unable To Find Product With Locator : ".$locator;
+            }
+        }
+        catch(Exception $e)
+        {
+            $productResp->message = "Error In Executing Sql Query To Get Product By Locator : ".$locator;
+        }
+
+        return $productResp;
+    }
+
+    public static function getProductsByStoreLocator(string $locator)
+    {
+        $stmt = "SELECT ".ProductController::$allViewColumns." FROM v_product WHERE store_locator = ?;";
+
+        $params = [$locator];
+
+        $productResp = new Response(false, "Unkown Error In Getting Store Products By Locator :".$locator, null);
+
+        try
+        {
+            $result = Database::executeSqlQuery($stmt, $params);
+
+            $productArray = [];
+
+            while($row = $result->fetch_assoc())
+            {
+                $product = ProductController::rowToVProduct($row);
+                
+                $productArray[] = $product;
+            }
+
+            $productResp->success = true;
+            $productResp->message = "Store Products Successfully Retreived From Store With Locator : ".$locator;
+            $productResp->data = $productArray;           
+        }
+        catch(Exception $e)
+        {
+            $productResp->message = "Error In Executing Sql Query To Retrieve Products From Store With Locator : ".$locator;
+        }
+
+        return $productResp;
+    }
+
+    public static function rowToVProduct(array $row)
+    {
+        $price = new vPrice($row["price"]);
+
+        $product = new vProduct(
+            $row["ctime"], 
+            $row["crand"], 
+            $row["name"], 
+            $row["locator"],
+            $price, 
+            $row["description"], 
+            $row["store_locator"], 
+            $row["ref_store_ctime"], 
+            $row["ref_store_crand"], 
+            $row["ref_media_ctime"], 
+            $row["ref_media_crand"], 
+            $row["mediaPath"]);
+
+        return $product;
+    }   
 
 }
 

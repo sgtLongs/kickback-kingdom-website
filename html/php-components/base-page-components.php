@@ -14,7 +14,146 @@ $mediaDirs = $mediaDirsResp->Data;
     </div>
 </div>
 
+<div class="modal fade modal-product-removed-from-cart" id="modalProductRemovedFromCart" tabindex="-1" role="dialog" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="checkoutModalLabel">Checkout</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                Product Removed From Cart.
+            </div>
+
+            <?php
+            if(isset($store))
+            {
+            ?>
+            <div class="modal-footer">
+                <div class="col-6"></div>
+                <div class="col-6 d-flex justify-content-around">
+                    <button type="button" onclick="window.location.href='market.php?locator=<?=$store->locator?>'" class="btn btn-primary"data-bs-dismiss="modal">Market</button>
+                    <button type="button" class="btn btn-primary"data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+            <?php
+            }
+            ?>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade modal-checkout-complete" id="modalCheckoutComplete" tabindex="-1" role="dialog" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="checkoutModalLabel">Checkout</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                Thanks You For Your Purchase!
+            </div>
+
+            <?php
+            if(isset($store))
+            {
+            ?>
+            <div class="modal-footer">
+                <div class="col-6"></div>
+                <div class="col-6 d-flex justify-content-around">
+                    <button type="button" onclick="window.location.href='market.php?locator=<?=$store->locator?>'" class="btn btn-primary"data-bs-dismiss="modal">Market</button>
+                    <button type="button" class="btn btn-primary"data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+            <?php
+            }
+            ?>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade modal-checkout-no-items-in-cart" id="modalCheckoutNoItemsInCart" tabindex="-1" role="dialog" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="checkoutModalLabel">Checkout</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                No Items Were Found In Cart!
+            </div>
+
+            <?php
+            if(isset($store))
+            {
+            ?>
+            <div class="modal-footer">
+                <div class="col-6"></div>
+                <div class="col-6 d-flex justify-content-around">
+                    <button type="button" onclick="window.location.href='market.php?locator=<?=$store->locator?>'" class="btn btn-primary"data-bs-dismiss="modal">Market</button>
+                    <button type="button" class="btn btn-primary"data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+            <?php
+            }
+            ?>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade modal-cart-addition" id="modalAddedToCart" tabindex="-1" role="dialog" aria-labelledby="cartModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cartModalLabel">Cart</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Item added to cart successfully.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php if(IsLoggedIn()) { ?>
+
+<!-- Add To Cart -->
+<div class="modal fade modal-cart-addition" id="modalAddedToCart" tabindex="-1" role="dialog" aria-labelledby="cartModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cartModalLabel">Cart</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Item added to cart successfully.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!--CHESTS-->
 <div class="modal fade modal-chest " id="modalChest" tabindex="-1" aria-labelledby="modalChestLabel" aria-hidden="true" onclick="ToggleChest();">
     <div class="modal-dialog  modal-dialog-centered">
@@ -388,7 +527,7 @@ $mediaDirs = $mediaDirsResp->Data;
             <p class="summary-line fw-bold total-line">Total: <span class="final-total-amount">0 </span></p>
         </div>
         <!-- Proceed to Checkout Button -->
-        <a class="btn btn-primary w-100 disabled" href="<?php echo $urlPrefixBeta; ?>/checkout.php" disabled>Proceed to Checkout</a>
+        <a class="btn btn-primary w-100 disabled" href="<?php echo $urlPrefixBeta; ?>/cart.php" disabled>Proceed to Checkout</a>
     </div>
 
 </div>

@@ -3,12 +3,18 @@
 declare(strict_types=1);
 
 namespace Kickback\Controllers;
+
 use \Kickback\Services\Database;
 use \Kickback\Views\vRecordId;
 use \Kickback\Models\Response;
 
 class BaseController
 {
+    public static function logData($logFile, $data) {
+        $logData = date('Y-m-d H:i:s') . " - Data: " . json_encode($data) . PHP_EOL;
+        file_put_contents($logFile, $logData, FILE_APPEND);
+    }
+
     protected static function runTest(callable $delegateTestMethod, array $params = [], string $parentClassPath = "Kickback\Controllers\StoreController")
     {
         echo "<h4>TESTING ".$delegateTestMethod[1]." FROM ".$parentClassPath."</h4><br>";
@@ -33,16 +39,25 @@ class BaseController
         echo "<br><br>";
     }
 
-    protected static function printIdDebugInfo(vRecordId $id, Exception $e = null) : string
+    public static function printIdDebugInfo(array $debugDict, Exception $e = null)
     {
-        $infoMessage = "Ctime : ".$id->ctime." | Crand : ".$id->crand;
+
+        $string = "";
+
+        foreach($debugDict as $key => $value)
+        {
+            $ctime = $value->ctime;
+            $crand = $value->crand;
+        
+            $string = $string." | ".$key."_ctime : ".$ctime." ".$key."_crand : ".$crand;
+        }
 
         if(isset($e))
         {
-            $infoMessage = $infoMessage." | Exception : ".$e;
+            $string = $string." | With Exception : ".$e;
         }
-        
-        return $infoMessage;
+
+        return $string;
     }
 }
 

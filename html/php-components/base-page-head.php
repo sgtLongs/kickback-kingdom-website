@@ -62,8 +62,26 @@ if(isset($thisStore))
 {
     $pageTitle = "Market";
     //$pageImage = ;
-    $pageDesc = "Hansi market, under development or something idk";
+    $pageDesc = "The Kickback Market : an area of great trade and fortune for those that know their trade.";
     $pageVisitId = '/market/';
+}
+
+if(isset($thisProduct))
+{
+    $pageTitle = $thisProduct->name;
+    //$pageImage = ;
+    $pageDesc = $thisProduct->description;
+    $pageVisitId = '/product/'.$thisProduct->locator;
+}
+
+if(isset($thisCheckoutCart))
+{
+
+    $pageTitle = 'Cart : '.$user;
+    //$pageImage = ;
+    $pageDesc = $user."'s Cart";
+ 
+    $pageVisitId = '/cart/'.$user;
 }
 
 

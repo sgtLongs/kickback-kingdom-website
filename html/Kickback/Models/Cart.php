@@ -11,12 +11,12 @@ class Cart extends RecordId
     public ForeignRecordId $accountId;
 
 
-    public function __construct(ForeignRecordId $account, ForeignRecordId $store)
+    public function __construct(string $accountCtime, int $accountCrand, string $storeCtime, int $storeCrand)
     {
         parent::__construct();
 
-        $this->storeId = $store;
-        $this->accountId = $account;
+        $this->storeId = new ForeignRecordId($storeCtime, $storeCrand);
+        $this->accountId = new ForeignRecordId($accountCtime, $accountCrand);
     }
 }
 
