@@ -5,7 +5,7 @@ namespace Kickback\Common;
 
 use \SplFixedArray;
 
-use \Kickback\Utilities\Str;
+use Kickback\Common\Str;
 
 /**
 * Class containing version info and history for the Kickback Kingdom website, backend, and API.
@@ -41,6 +41,24 @@ final class Version
         $ver = $history[$history->count() - 1];
         assert(isset($ver));
         return $ver;
+    }
+
+    public static function isBeta() : bool 
+    {
+        return array_key_exists("KICKBACK_IS_BETA",$_SERVER) && $_SERVER["KICKBACK_IS_BETA"];
+    }
+
+    public static function urlBetaPrefix() : string {
+        if (self::isBeta())
+        {
+            return "/beta";
+        }
+
+        return "";
+    }
+
+    public static function formatUrl(string $url) : string {
+        return self::urlBetaPrefix().$url;
     }
 
     // We use `SplFixedArray` to enforce integer-valued indices.

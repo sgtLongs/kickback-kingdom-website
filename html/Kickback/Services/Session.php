@@ -3,17 +3,17 @@
 namespace Kickback\Services;
 
 use mysqli;
-use Kickback\Config\ServiceCredentials; 
-use Kickback\Models\Response;
-use Kickback\Views\vSessionInformation;
-use Kickback\Controllers\AccountController;
-use Kickback\Views\vAccount;
+use Kickback\Backend\Config\ServiceCredentials;
+use Kickback\Backend\Models\Response;
+use Kickback\Backend\Views\vSessionInformation;
+use Kickback\Backend\Controllers\AccountController;
+use Kickback\Backend\Controllers\NotificationController;
+use Kickback\Backend\Views\vAccount;
 
 class Session {
-    private static $currentAccount = null;
-    public static function getCurrentAccount() :vAccount {
+    private static ?vAccount $currentAccount = null;
+    public static function getCurrentAccount() : ?vAccount {
         if (self::$currentAccount === null) {
-            // Logic to set the current account if it's not already set
             self::$currentAccount = self::fetchCurrentAccount();
         }
         return self::$currentAccount;
@@ -27,7 +27,7 @@ class Session {
         return isset($_SESSION['account_using_delegate_access']);
     }
 
-    private static function fetchCurrentAccount(): vAccount {
+    private static function fetchCurrentAccount(): ?vAccount {
         // Logic to fetch current account from session or database
         if (self::isLoggedIn()) {
             return self::getSessionData('vAccount');
@@ -35,19 +35,19 @@ class Session {
         return null;
     }
 
-    private static function setCurrentAccount(vAccount $account) {
+    private static function setCurrentAccount(vAccount $account) : void {
         self::setSessionData("vAccount", $account);
-        $currentAccount = $account;
+        self::$currentAccount = $account;
     }
 
-    private static function clearCurrentAccount() {
+    private static function clearCurrentAccount() : void {
         
         self::setSessionData("vAccount", null);
-        $currentAccount = null;
+        self::$currentAccount = null;
     }
 
     
-    public static function loginToService($accountId, $serviceKey) : bool
+    public static function loginToService(int $accountId, string $serviceKey) : bool
     {
         $conn = Database::getConnection();
         if (session_status() == PHP_SESSION_ACTIVE)
@@ -128,6 +128,7 @@ class Session {
         }
 
         $accountId = $row["Id"];
+        assert(is_string($accountId));
         if (!self::loginToService($accountId, $serviceKey)) {
             return (new Response(false, "Failed to login", null));
         }
@@ -167,7 +168,7 @@ class Session {
                 $chestsResp = AccountController::getAccountChests($account);
                 $info->chests = $chestsResp->data;
                 
-                $info->notifications = AccountController::getAccountNotifications($account)->data;
+                $info->notifications = NotificationController::getNotificationsByAccount($account)->data;
     
                 $info->chestsJSON = json_encode($info->chests);
                 $info->notificationsJSON = json_encode($info->notifications);
@@ -211,6 +212,18 @@ class Session {
     public static function removeSessionData($key) {
         if (isset($_SESSION[$key])) {
             unset($_SESSION[$key]);
+        }
+    }
+    
+    public static function getCurrentSessionId() {
+        self::ensureSessionStarted();
+        return session_id() ?: null; // Use null coalescing operator to handle non-existent session IDs.
+    }
+
+    
+    public static function ensureSessionStarted() {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
         }
     }
 }

@@ -698,11 +698,11 @@ $(document).ready(function() {
         }
         
         let checklistHtml = '';
-        <?php if (IsLoggedIn()) { ?>
+        <?php if (Kickback\Services\Session::isLoggedIn()) { ?>
         event.checklist.forEach(function(item) {
             let username = '';
             if (item[1] != null)
-                username = `<a href="<?php echo $urlPrefixBeta; ?>/u/${accounts[item[1]]}" class="username">${accounts[item[1]]}</a>`
+                username = `<a href="<?php echo Version::urlBetaPrefix(); ?>/u/${accounts[item[1]]}" class="username">${accounts[item[1]]}</a>`
                 
             let icon = item[0] ? '<i class="fa-solid fa-square-check"></i>' : '<i class="fa-regular fa-square"></i>'; // Replace with your preferred icons
             checklistHtml += `<div class="checklist-item " ${item[0] ? "style='text-decoration: line-through;'" : ""} >${icon} ${username} ${item[2]}</div>`;

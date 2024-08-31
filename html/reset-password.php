@@ -8,6 +8,9 @@ require_once(($_SERVER["DOCUMENT_ROOT"] ?: __DIR__) . "/Kickback/init.php");
 $session = require(\Kickback\SCRIPT_ROOT . "/api/v1/engine/session/verifySession.php");
 require("php-components/base-page-pull-active-account-info.php");
 
+use Kickback\Backend\Controllers\AccountController;
+use Kickback\Backend\Views\vAccount;
+
 \Kickback\Common\Version::$show_version_popup = false;
 $redirectUrl = 'index.php';
 
@@ -21,16 +24,18 @@ $errorMessage = "";
 
 
 
-$accountResp = GetAccountById($_GET["i"]);
+$accountResp = AccountController::getAccountById(new vAccount('', $_GET["i"]));
 $code = $_GET["c"];
 
-if ($accountResp->Success)
+if ($accountResp->success)
 {
-    $account = $accountResp->Data;
-    if ($account["pass_reset"] != $code)
+    $account = $accountResp->data;
+    assert($account instanceof vAccount);
+    $resp = AccountController::verifyPasswordResetCode($account, $code);
+    if (!$resp->success)
     {
         $hasError = true;
-        $errorMessage = 'Link is invalid.';
+        $errorMessage = $resp->message;
 
     }
     else
@@ -38,8 +43,8 @@ if ($accountResp->Success)
 
         if (isset($_POST["submit"]))
         {
-            $resp = UpdateAccountPassword($account["Id"], $code, $_POST["password"]);
-            if ($resp->Success)
+            $resp = AccountController::updateAccountPassword($account, $code, $_POST["password"]);
+            if ($resp->success)
             {
 
                 header("Location: login.php");
@@ -48,7 +53,7 @@ if ($accountResp->Success)
             {
 
                 $hasError = true;
-                $errorMessage = $resp->Message;
+                $errorMessage = $resp->message;
             }
         }
     }
@@ -57,7 +62,7 @@ if ($accountResp->Success)
 else
 {
     $hasError = true;
-    $errorMessage = $accountResp->Message;
+    $errorMessage = $accountResp->message;
 }
 
 
@@ -99,7 +104,7 @@ else
                     
                 </div>
                 <div class="modal-footer">
-                    <a type="button" class="btn btn-secondary" href="<?php echo $urlPrefixBeta."/".$redirectUrl; ?>">Back</a>
+                    <a type="button" class="btn btn-secondary" href="<?php echo Version::urlBetaPrefix()."/".$redirectUrl; ?>">Back</a>
                     <input type="submit" name="submit" class="btn btn-primary" value="Change Password">
                 </div>
             </div>
